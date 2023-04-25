@@ -87,9 +87,15 @@ module.exports = function (app) {
   app.route('/api/books/:id')
     .get(async function (req, res){
       let bookid = req.params.id;
-    
-      const theBook = await Book.findById(bookid);
+      let theBook ;
 
+      try{
+      theBook = await Book.findById(bookid);
+      }
+      catch(err){
+        console.log(theBook)
+      }
+    
       if(!theBook){
         res.json('no book exists');
       }
@@ -104,25 +110,65 @@ module.exports = function (app) {
  
     })
     
-    .post(function(req, res){
+    .post(async function(req, res){
       let bookid = req.params.id;
       let comment = req.body.comment;
-      //json res format same as .get
-    })
-    
-    .delete(async function(req, res){
-      let bookid = req.params.id;
-      //if successful response will be 'delete successful'    
-      const theBook = await Book.findById(bookid);
+      let theBook ;
 
+      try{
+      theBook = await Book.findById(bookid);
+      }
+      catch(err){
+        console.log(theBook)
+      }
+    
       if(!theBook){
         res.json('no book exists');
       }
       else{
 
-      theBook.deleteOne();  
-      res.json('complete delete successful');
+      if(!comment){
+        res.json('missing required field comment');
+      }  
+      else{
+        theBook.comments.push(comment);
+      theBook.commentcount = theBook.commentcount + 1 ;  
+      theBook.save();
+        
+      res.json({
+        title : theBook.title,
+        _id : theBook._id,
+        comments : theBook.comments 
+      });
       }
+      }
+    
+      //json res format same as .get
+    })
+    
+    .delete(async function(req, res){
+      let bookid = req.params.id;
+      //if successful response will be 'delete successful'   
+      let deletedBook;
+
+      try{
+        deletedBook = await Book.findByIdAndRemove(bookid);  
+        res.json('delete successful');
+        console.log(deletedBook)
+      }
+      catch(error){
+        console.log(error);
+      }
+
+      if(!deletedBook){
+        res.json('no book exists');
+      }
+
+      
+
+      
+      
+      
     });
   
 };
